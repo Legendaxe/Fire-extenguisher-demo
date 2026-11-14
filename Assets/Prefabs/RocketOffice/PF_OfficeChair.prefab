@@ -1,5 +1,36 @@
 %YAML 1.1
 %TAG !u! tag:unity3d.com,2011:
+--- !u!1 &3863621847107818669
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 4008757325003351207}
+  m_Layer: 0
+  m_Name: SitPoint
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &4008757325003351207
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3863621847107818669}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0.58, z: 0.05}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 5305645417334476311}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &3873631315493067244
 GameObject:
   m_ObjectHideFlags: 0
@@ -12,6 +43,7 @@ GameObject:
   - component: {fileID: 4513945020600855381}
   - component: {fileID: 5939899886811539733}
   - component: {fileID: 8862019986903654448}
+  - component: {fileID: 1165026857867250022}
   m_Layer: 0
   m_Name: PF_OfficeChair
   m_TagString: Untagged
@@ -33,6 +65,7 @@ Transform:
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 3074484928516179599}
+  - {fileID: 4008757325003351207}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!54 &4513945020600855381
@@ -104,6 +137,22 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 0.5, y: 0.5, z: 0.18}
   m_Center: {x: 0, y: 0.85, z: -0.22}
+--- !u!114 &1165026857867250022
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3873631315493067244}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b47e390d08ffd734a8293f671e9fd0e0, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::FireExtinguisher.Interaction.ChairSeat
+  sitPoint: {fileID: 4008757325003351207}
+  config: {fileID: 11400000, guid: 2121803c638706c4bae568fcdeefc69b, type: 2}
+  fallbackSitPrompt: Sit
+  fallbackStandPrompt: Stand
 --- !u!1001 &3251733886111228260
 PrefabInstance:
   m_ObjectHideFlags: 0

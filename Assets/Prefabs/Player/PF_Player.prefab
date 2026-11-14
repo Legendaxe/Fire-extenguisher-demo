@@ -1,0 +1,251 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!1 &5055884394380701124
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 7942071699276700481}
+  - component: {fileID: 2796264530322990166}
+  - component: {fileID: 4200380616813999089}
+  - component: {fileID: 5631279644828958982}
+  - component: {fileID: 2571927701468578018}
+  - component: {fileID: 6253081993034117150}
+  - component: {fileID: 7727120761222635633}
+  - component: {fileID: 60180427970854275}
+  - component: {fileID: 8568500038691401557}
+  - component: {fileID: 2832794519911172399}
+  m_Layer: 0
+  m_Name: PF_Player
+  m_TagString: Player
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &7942071699276700481
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5055884394380701124}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children:
+  - {fileID: 5434073942164887486}
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!54 &2796264530322990166
+Rigidbody:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5055884394380701124}
+  serializedVersion: 5
+  m_Mass: 70
+  m_LinearDamping: 0
+  m_AngularDamping: 0.05
+  m_CenterOfMass: {x: 0, y: 0, z: 0}
+  m_InertiaTensor: {x: 1, y: 1, z: 1}
+  m_InertiaRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ImplicitCom: 1
+  m_ImplicitTensor: 1
+  m_UseGravity: 1
+  m_IsKinematic: 0
+  m_Interpolate: 1
+  m_Constraints: 112
+  m_CollisionDetection: 3
+--- !u!136 &4200380616813999089
+CapsuleCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5055884394380701124}
+  m_Material: {fileID: 13400000, guid: 72165118398c90a41870ec4992df0448, type: 2}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 2
+  m_Radius: 0.3
+  m_Height: 1.8
+  m_Direction: 1
+  m_Center: {x: 0, y: 0.9, z: 0}
+--- !u!114 &5631279644828958982
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5055884394380701124}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4d8e60cb5c0b496408a41edda7d97161, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::FireExtinguisher.Player.PlayerInputReader
+  actions: {fileID: -944628639613478452, guid: 052faaac586de48259a63d0c4782560b, type: 3}
+  actionMapName: Player
+  moveActionName: Move
+  lookActionName: Look
+  jumpActionName: Jump
+  sprintActionName: Sprint
+  interactActionName: Interact
+--- !u!114 &2571927701468578018
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5055884394380701124}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7961ddd7597117a488612053a50e43b5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::FireExtinguisher.Player.PlayerMotor
+  input: {fileID: 5631279644828958982}
+  body: {fileID: 2796264530322990166}
+  capsule: {fileID: 4200380616813999089}
+  walkSpeed: 4.5
+  sprintSpeed: 7
+  acceleration: 22
+  airControl: 0.25
+  jumpSpeed: 4.6
+  groundCheckDistance: 0.15
+  maxGroundAngle: 50
+  groundMask:
+    serializedVersion: 2
+    m_Bits: 4294967295
+--- !u!114 &6253081993034117150
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5055884394380701124}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fc03dd7135b1f9341baeb2fbd8df2c04, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::FireExtinguisher.Player.PlayerLook
+  input: {fileID: 5631279644828958982}
+  cameraPivot: {fileID: 5434073942164887486}
+  body: {fileID: 2796264530322990166}
+  mouseSensitivity: 0.12
+  stickSensitivity: 180
+  minPitch: -80
+  maxPitch: 80
+  lockCursorOnStart: 1
+--- !u!114 &7727120761222635633
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5055884394380701124}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 96a0df210fb813b4cb87a4b37aba1583, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::FireExtinguisher.Player.SeatController
+  body: {fileID: 2796264530322990166}
+  bodyCollider: {fileID: 4200380616813999089}
+  motor: {fileID: 2571927701468578018}
+  look: {fileID: 6253081993034117150}
+  defaultConfig: {fileID: 11400000, guid: 2121803c638706c4bae568fcdeefc69b, type: 2}
+--- !u!114 &60180427970854275
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5055884394380701124}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9e9c1b34c38e8a2468b50dd1a7a7b6e7, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::FireExtinguisher.Player.PlayerInteractor
+  input: {fileID: 5631279644828958982}
+--- !u!114 &8568500038691401557
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5055884394380701124}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: abc78fd6d9d4c494ba46cad266e34dfe, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::FireExtinguisher.Player.RaycastInteractionProvider
+  viewCamera: {fileID: 0}
+  interactionDistance: 2.5
+  interactionMask:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  triggerInteraction: 1
+  priority: 0
+--- !u!114 &2832794519911172399
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5055884394380701124}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 37d2db2f71a33904990c21671d405361, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::FireExtinguisher.Player.SeatInteractionProvider
+  occupant: {fileID: 7727120761222635633}
+  priority: 100
+--- !u!1 &5615985492185901032
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 5434073942164887486}
+  m_Layer: 0
+  m_Name: CameraPivot
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &5434073942164887486
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5615985492185901032}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 1.6, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 7942071699276700481}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
