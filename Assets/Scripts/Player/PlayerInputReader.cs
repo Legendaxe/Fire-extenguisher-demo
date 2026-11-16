@@ -21,6 +21,10 @@ namespace FireExtinguisher.Player
         [SerializeField] private string jumpActionName = "Jump";
         [SerializeField] private string sprintActionName = "Sprint";
         [SerializeField] private string interactActionName = "Interact";
+        [Tooltip("Existing 'Attack' action, used as the rocket fire button (LMB / gamepad West).")]
+        [SerializeField] private string fireActionName = "Attack";
+        [Tooltip("Action that throws the carried extinguisher back into the world (G / gamepad East).")]
+        [SerializeField] private string dropActionName = "Drop";
 
         private InputActionMap _map;
         private InputAction _move;
@@ -28,6 +32,17 @@ namespace FireExtinguisher.Player
         private InputAction _jump;
         private InputAction _sprint;
         private InputAction _interact;
+        private InputAction _fire;
+        private InputAction _drop;
+
+        /// <summary>
+        /// Debug and test override for the fire button. Null samples the real Attack action.
+        /// The headless smoke test uses this because a batchmode editor has no focused Game view.
+        /// </summary>
+        public bool? FireOverride { get; set; }
+
+        /// <summary>Debug and test override for the drop button. Null samples the real Drop action.</summary>
+        public bool? DropOverride { get; set; }
 
         /// <summary>Raised once per Interact press.</summary>
         public event Action InteractPerformed;
@@ -36,6 +51,11 @@ namespace FireExtinguisher.Player
         public Vector2 Look => _look != null ? _look.ReadValue<Vector2>() : Vector2.zero;
         public bool SprintHeld => _sprint != null && _sprint.IsPressed();
         public bool JumpWasPressed => _jump != null && _jump.WasPressedThisFrame();
+        public bool FireHeld => FireOverride ?? (_fire != null && _fire.IsPressed());
+        public bool DropWasPressed => DropOverride ?? (_drop != null && _drop.WasPressedThisFrame());
+
+        /// <summary>True when the input asset actually contains the Drop action.</summary>
+        public bool HasDropAction => _drop != null;
 
         /// <summary>True when the last look value came from a mouse/pen rather than a stick.</summary>
         public bool LookFromPointer =>
@@ -88,6 +108,8 @@ namespace FireExtinguisher.Player
             _jump = _map.FindAction(jumpActionName, false);
             _sprint = _map.FindAction(sprintActionName, false);
             _interact = _map.FindAction(interactActionName, false);
+            _fire = _map.FindAction(fireActionName, false);
+            _drop = _map.FindAction(dropActionName, false);
         }
 
         private void HandleInteract(InputAction.CallbackContext context)

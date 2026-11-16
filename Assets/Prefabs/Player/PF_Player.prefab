@@ -18,6 +18,7 @@ GameObject:
   - component: {fileID: 60180427970854275}
   - component: {fileID: 8568500038691401557}
   - component: {fileID: 2832794519911172399}
+  - component: {fileID: 7597778136643535516}
   m_Layer: 0
   m_Name: PF_Player
   m_TagString: Player
@@ -110,6 +111,8 @@ MonoBehaviour:
   jumpActionName: Jump
   sprintActionName: Sprint
   interactActionName: Interact
+  fireActionName: Attack
+  dropActionName: Drop
 --- !u!114 &2571927701468578018
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -218,6 +221,22 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::FireExtinguisher.Player.SeatInteractionProvider
   occupant: {fileID: 7727120761222635633}
   priority: 100
+--- !u!114 &7597778136643535516
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5055884394380701124}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3b888d9b3ae7e6c429ebba06f0ac7230, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::FireExtinguisher.Player.PlayerEquipment
+  handAnchor: {fileID: 7575767555698852505}
+  input: {fileID: 0}
+  dropForwardDistance: 0.6
+  dropHeight: 0.8
 --- !u!1 &5615985492185901032
 GameObject:
   m_ObjectHideFlags: 0
@@ -246,6 +265,38 @@ Transform:
   m_LocalPosition: {x: 0, y: 1.6, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
-  m_Children: []
+  m_Children:
+  - {fileID: 7575767555698852505}
   m_Father: {fileID: 7942071699276700481}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &9142752828874269411
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 7575767555698852505}
+  m_Layer: 0
+  m_Name: HandAnchor
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &7575767555698852505
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 9142752828874269411}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0.3, y: -0.26, z: 0.5}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 5434073942164887486}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}

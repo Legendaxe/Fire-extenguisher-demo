@@ -4,8 +4,9 @@ using UnityEngine.InputSystem;
 namespace FireExtinguisher.Player
 {
     /// <summary>
-    /// First-person look. Yaw rotates the body (through the Rigidbody), pitch rotates the camera pivot.
-    /// While seated, yaw is clamped around the chair's forward axis so the body stays in the chair.
+    /// First-person look. Standing, yaw rotates the body (through the Rigidbody) and pitch
+    /// rotates the camera pivot. While seated the chair's own rotation drives the body; look
+    /// input adds a clamped yaw offset on top of it, so the view rides the chair as it tips.
     /// </summary>
     [DisallowMultipleComponent]
     [RequireComponent(typeof(Rigidbody))]
@@ -87,10 +88,12 @@ namespace FireExtinguisher.Player
 
         private void FixedUpdate()
         {
+            // While seated the seat drives the body rotation, including the chair's tilt.
+            if (_seatFrame != null)
+                return;
+
             if (body == null || body.isKinematic)
             {
-                // Kinematic bodies do not need the physics step; rotate immediately so the
-                // seated view follows the chair without one-frame lag.
                 transform.rotation = Quaternion.Euler(0f, _yaw, 0f);
                 return;
             }
@@ -98,24 +101,46 @@ namespace FireExtinguisher.Player
             body.MoveRotation(Quaternion.Euler(0f, _yaw, 0f));
         }
 
-        /// <summary>Seats the view on a chair anchor and limits yaw around its forward axis.</summary>
+        /// <summary>Seats the view on a chair anchor and limits yaw around its up axis.</summary>
         public void SetSeatFrame(Transform frame, float yawLimit)
         {
             _seatFrame = frame;
             _seatedYawLimit = Mathf.Clamp(yawLimit, 0f, 180f);
-            _seatedYawOffset = 0f;
 
-            if (_seatFrame != null)
+            if (_seatFrame == null)
             {
-                _yaw = _seatFrame.eulerAngles.y;
-                transform.rotation = Quaternion.Euler(0f, _yaw, 0f);
+                _seatedYawOffset = 0f;
+                return;
             }
+
+            // Keep the current look direction relative to the chair instead of snapping the view
+            // to its forward axis. The offset is measured in the seat's frame so it survives
+            // the chair spinning and tumbling.
+            _seatedYawOffset = Mathf.Clamp(
+                Mathf.DeltaAngle(_seatFrame.eulerAngles.y, transform.eulerAngles.y),
+                -_seatedYawLimit,
+                _seatedYawLimit);
+        }
+
+        /// <summary>
+        /// Rotation the seated player root should use: the chair's full orientation plus the
+        /// player's clamped look offset. Used by <see cref="SeatController"/> while riding.
+        /// </summary>
+        public Quaternion GetSeatedRotation()
+        {
+            if (_seatFrame == null)
+                return transform.rotation;
+
+            return _seatFrame.rotation * Quaternion.AngleAxis(_seatedYawOffset, Vector3.up);
         }
 
         public void ClearSeatFrame()
         {
             _seatFrame = null;
             _seatedYawOffset = 0f;
+
+            // Pick up the yaw the seated view ended on so standing up does not snap the view.
+            _yaw = transform.eulerAngles.y;
         }
 
         /// <summary>Moves the camera between standing and seated eye heights.</summary>
@@ -137,8 +162,6 @@ namespace FireExtinguisher.Player
                     _seatedYawOffset + yawDelta,
                     -_seatedYawLimit,
                     _seatedYawLimit);
-
-                _yaw = _seatFrame.eulerAngles.y + _seatedYawOffset;
                 return;
             }
 

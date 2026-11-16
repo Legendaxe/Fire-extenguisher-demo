@@ -5,8 +5,9 @@ namespace FireExtinguisher.Player
 {
     /// <summary>
     /// Owns the seated state of one player. While seated the body is kinematic, the capsule is
-    /// off, movement is disabled and the player follows the seat anchor. The seat's own
-    /// Rigidbody is never touched, so it stays dynamic and can still be pushed.
+    /// off, movement is disabled and the player follows the seat anchor in position and
+    /// rotation, so the view rides the chair as it tips. The seat's own Rigidbody is never
+    /// touched, so it stays dynamic and can still be pushed.
     /// Implements <see cref="ISeatOccupant"/> so seats never need to know this type.
     /// </summary>
     [DisallowMultipleComponent]
@@ -47,8 +48,11 @@ namespace FireExtinguisher.Player
             if (_seat == null)
                 return;
 
-            // The seat moves through physics; ride its anchor while keeping the body upright.
-            transform.position = _seat.SitPoint.position;
+            // The seat moves through physics; ride its anchor, including the chair's tilt, so
+            // the camera is attached to the chair instead of the world.
+            Transform anchor = _seat.SitPoint;
+            Quaternion rotation = look != null ? look.GetSeatedRotation() : anchor.rotation;
+            transform.SetPositionAndRotation(anchor.position, rotation);
         }
 
         public bool TrySit(ISeat seat)
@@ -80,15 +84,15 @@ namespace FireExtinguisher.Player
             if (bodyCollider != null)
                 bodyCollider.enabled = false;
 
-            transform.SetPositionAndRotation(
-                anchor.position,
-                Quaternion.Euler(0f, anchor.eulerAngles.y, 0f));
-
             if (look != null)
             {
                 look.SetSeatedView(true, config.SeatedEyeHeight);
                 look.SetSeatFrame(anchor, config.SeatedYawLimit);
             }
+
+            transform.SetPositionAndRotation(
+                anchor.position,
+                look != null ? look.GetSeatedRotation() : anchor.rotation);
 
             Physics.SyncTransforms();
             SeatedChanged?.Invoke(seat, true);
