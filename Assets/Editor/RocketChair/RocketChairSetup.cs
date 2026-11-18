@@ -44,7 +44,7 @@ namespace FireExtinguisher.EditorTools
         private const string DefaultPropPhysicsPath = PhysicsFolder + "/PM_DefaultProp.physicMaterial";
 
         private const string DemoChairName = "RocketChair_Demo";
-        private static readonly Vector3 DemoChairPosition = new Vector3(0f, 0f, -6.3f);
+        private static readonly Vector3 DemoChairPosition = new Vector3(-2.6f, 0f, -13.6f);
 
         private const string GlassPartitionName = "GlassPartition";
         private static readonly Vector3 GlassPartitionPosition = new Vector3(5f, 0f, -2f);
@@ -1110,6 +1110,9 @@ namespace FireExtinguisher.EditorTools
             if (mainCamera != null && mainCamera.GetComponent<CameraShake>() == null)
                 mainCamera.gameObject.AddComponent<CameraShake>();
 
+            if (mainCamera != null && mainCamera.GetComponent<CameraFloorGuard>() == null)
+                mainCamera.gameObject.AddComponent<CameraFloorGuard>();
+
             GameObject hud = GameObject.Find("HUD");
             if (hud != null)
                 EnsureFuelGauge(hud);
@@ -1123,15 +1126,15 @@ namespace FireExtinguisher.EditorTools
 
             DestroyIfExists("FireExtinguisher_Demo");
             CreateExtinguisherInstance(extinguisherPrefab, "FireExtinguisher_Demo",
-                new Vector3(0.6f, 0.02f, -6.15f), 22f);
+                new Vector3(-1.9f, 0.02f, -13.45f), 22f);
 
             DestroyIfExists("FireExtinguisher_WestWall");
             CreateExtinguisherInstance(extinguisherPrefab, "FireExtinguisher_WestWall",
-                new Vector3(-8.65f, 0.02f, -0.9f), -38f);
+                new Vector3(-15.4f, 0.02f, -0.9f), 90f);
 
             DestroyIfExists("FireExtinguisher_EastWall");
             CreateExtinguisherInstance(extinguisherPrefab, "FireExtinguisher_EastWall",
-                new Vector3(7.6f, 0.02f, 3.6f), 118f);
+                new Vector3(15.4f, 0.02f, 3.6f), -90f);
         }
 
         /// <summary>
@@ -1140,17 +1143,77 @@ namespace FireExtinguisher.EditorTools
         /// </summary>
         private static void BuildGlassPartition(MaterialSet materials, AudioSet audio)
         {
-            DestroyIfExists(GlassPartitionName);
+            BuildGlassWall(
+                GlassPartitionName, GlassPartitionPosition, Quaternion.identity,
+                GlassPartitionWidth, GlassPartitionHeight,
+                GlassShardColumns, GlassShardRows, materials, audio);
+        }
 
-            var root = new GameObject(GlassPartitionName);
-            root.transform.SetPositionAndRotation(GlassPartitionPosition, Quaternion.identity);
+        /// <summary>
+        /// Builds one breakable glass wall. Shared with the arena layout so extra barriers use the
+        /// same pane, frame, shard and audio setup as the office partition. Loads the already
+        /// generated materials and clip without rewriting them, so laying out extra walls never
+        /// touches the shared assets.
+        /// </summary>
+        public static GameObject BuildGlassWall(
+            string name,
+            Vector3 position,
+            Quaternion rotation,
+            float width,
+            float height,
+            int columns,
+            int rows)
+        {
+            var materials = new MaterialSet
+            {
+                Metal = LoadRequiredMaterial(MaterialsFolder + "/M_ExtinguisherMetal.mat"),
+                Glass = LoadRequiredMaterial(MaterialsFolder + "/M_Glass.mat")
+            };
+
+            var audio = new AudioSet
+            {
+                GlassBreak = AssetDatabase.LoadAssetAtPath<AudioClip>(AudioFolder + "/A_GlassBreak.wav")
+            };
+
+            return BuildGlassWall(name, position, rotation, width, height, columns, rows, materials, audio);
+        }
+
+        private static Material LoadRequiredMaterial(string path)
+        {
+            var material = AssetDatabase.LoadAssetAtPath<Material>(path);
+            if (material == null)
+                throw new InvalidOperationException(
+                    $"RocketChairSetup: missing material '{path}'. " +
+                    "Run Tools > Rocket Chair > Rebuild All Assets first.");
+
+            return material;
+        }
+
+        private static GameObject BuildGlassWall(
+            string name,
+            Vector3 position,
+            Quaternion rotation,
+            float width,
+            float height,
+            int columns,
+            int rows,
+            MaterialSet materials,
+            AudioSet audio)
+        {
+            DestroyIfExists(name);
+
+            columns = Mathf.Max(1, columns);
+            rows = Mathf.Max(1, rows);
+
+            var root = new GameObject(name);
+            root.transform.SetPositionAndRotation(position, rotation);
             Transform rootTransform = root.transform;
 
             var frame = new GameObject("Frame");
             frame.transform.SetParent(rootTransform, false);
 
-            float halfWidth = GlassPartitionWidth * 0.5f;
-            const float postHeight = GlassPartitionHeight + 0.1f;
+            float halfWidth = width * 0.5f;
+            float postHeight = height + 0.1f;
             Vector3 postSize = new Vector3(0.09f, postHeight, 0.16f);
 
             Primitive(PrimitiveType.Cube, "Post_Left", frame.transform,
@@ -1158,28 +1221,28 @@ namespace FireExtinguisher.EditorTools
             Primitive(PrimitiveType.Cube, "Post_Right", frame.transform,
                 new Vector3(halfWidth + 0.045f, postHeight * 0.5f, 0f), postSize, materials.Metal, null, true);
             Primitive(PrimitiveType.Cube, "Rail_Top", frame.transform,
-                new Vector3(0f, GlassPartitionHeight + 0.04f, 0f),
-                new Vector3(GlassPartitionWidth + 0.18f, 0.09f, 0.16f), materials.Metal, null, true);
+                new Vector3(0f, height + 0.04f, 0f),
+                new Vector3(width + 0.18f, 0.09f, 0.16f), materials.Metal, null, true);
             Primitive(PrimitiveType.Cube, "Rail_Bottom", frame.transform,
                 new Vector3(0f, 0.04f, 0f),
-                new Vector3(GlassPartitionWidth + 0.18f, 0.08f, 0.16f), materials.Metal, null, true);
+                new Vector3(width + 0.18f, 0.08f, 0.16f), materials.Metal, null, true);
 
             // The intact pane is the only collider the chair can hit before the break.
             GameObject pane = Primitive(PrimitiveType.Cube, "Pane", rootTransform,
-                new Vector3(0f, GlassPartitionHeight * 0.5f, 0f),
-                new Vector3(GlassPartitionWidth, GlassPartitionHeight, 0.06f),
+                new Vector3(0f, height * 0.5f, 0f),
+                new Vector3(width, height, 0.06f),
                 materials.Glass, null, true);
             DisableShadowCasting(pane);
 
             var shardsRoot = new GameObject("Shards");
             shardsRoot.transform.SetParent(rootTransform, false);
 
-            float cellWidth = GlassPartitionWidth / GlassShardColumns;
-            float cellHeight = GlassPartitionHeight / GlassShardRows;
+            float cellWidth = width / columns;
+            float cellHeight = height / rows;
 
-            for (int row = 0; row < GlassShardRows; row++)
+            for (int row = 0; row < rows; row++)
             {
-                for (int column = 0; column < GlassShardColumns; column++)
+                for (int column = 0; column < columns; column++)
                 {
                     GameObject shard = Primitive(PrimitiveType.Cube,
                         $"Shard_{row}_{column}", shardsRoot.transform,
@@ -1216,6 +1279,8 @@ namespace FireExtinguisher.EditorTools
             SetFloat(glass, "shardSpin", 9f);
             SetFloat(glass, "cameraTrauma", 0.45f);
             SetFloat(glass, "shakeRange", 20f);
+
+            return root;
         }
 
         private static void DisableShadowCasting(GameObject target)

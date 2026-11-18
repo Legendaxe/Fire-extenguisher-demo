@@ -15,7 +15,7 @@ MonoBehaviour:
   sitPrompt: Sit
   standPrompt: Stand
   seatedEyeHeight: 0.68
-  seatedYawLimit: 80
+  seatedYawLimit: 90
   standUpCooldown: 0.25
   standProbeDistance: 0.8
   standProbeLift: 0.05

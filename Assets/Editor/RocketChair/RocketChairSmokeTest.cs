@@ -126,6 +126,11 @@ namespace FireExtinguisher.EditorTools
                     : null;
                 Check(feedback != null, "Main Camera has CameraFeedback.");
 
+                CameraFloorGuard floorGuard = Camera.main != null
+                    ? Camera.main.GetComponent<CameraFloorGuard>()
+                    : null;
+                Check(floorGuard != null, "Main Camera has a floor guard.");
+
                 SeatController seatController = Object.FindFirstObjectByType<SeatController>();
                 Check(seatController != null, "Scene player has SeatController.");
 
@@ -247,6 +252,17 @@ namespace FireExtinguisher.EditorTools
                 {
                     yield break;
                 }
+
+                // Stage the thrust measurement on the clear south straight of the arena ring:
+                // the start paddock sits close to the south wall, and firing towards the door
+                // would take the chair out of the room before the test can measure speed.
+                chairBody.position = new Vector3(-12f, 0.15f, -13.5f);
+                chairBody.MoveRotation(Quaternion.Euler(0f, -90f, 0f));
+                chairBody.linearVelocity = Vector3.zero;
+                chairBody.angularVelocity = Vector3.zero;
+                Physics.SyncTransforms();
+                yield return new WaitForFixedUpdate();
+                yield return new WaitForEndOfFrame();
 
                 float fuelBefore = extinguisher.Fuel;
                 Vector3 startPosition = demoChair.transform.position;
@@ -506,8 +522,10 @@ namespace FireExtinguisher.EditorTools
                 Quaternion tilt = Quaternion.Euler(0f, yaw, 25f);
                 chairBody.MoveRotation(tilt);
 
+                // The player body copies the seat in LateUpdate, so read the camera after a
+                // rendered frame instead of in the middle of Update with a stale transform.
                 yield return new WaitForFixedUpdate();
-                yield return null;
+                yield return new WaitForEndOfFrame();
 
                 Transform camera = Camera.main.transform;
                 float upDot = Vector3.Dot(camera.up, demoChair.transform.up);
@@ -517,6 +535,19 @@ namespace FireExtinguisher.EditorTools
 
                 Check(upDot > 0.99f, "Seated camera rotates with the chair.");
                 Check(worldTilt > 10f, "Seated camera actually tilts with the chair.");
+
+                // Roll the chair far enough that the seated eye would be under the floor, which
+                // is the "camera clips through the floor while rolling" case.
+                chairBody.linearVelocity = Vector3.zero;
+                chairBody.angularVelocity = Vector3.zero;
+                chairBody.MoveRotation(Quaternion.Euler(0f, yaw, 150f));
+                Physics.SyncTransforms();
+                yield return new WaitForFixedUpdate();
+                yield return new WaitForEndOfFrame();
+
+                float rolledCameraY = Camera.main.transform.position.y;
+                Append($"seated camera: world y at 150 deg roll {rolledCameraY:0.00}");
+                Check(rolledCameraY > 0.1f, "Camera stays above the floor while the chair rolls.");
 
                 // Put the chair back on its wheels, at rest, for whatever runs next.
                 chairBody.linearVelocity = Vector3.zero;

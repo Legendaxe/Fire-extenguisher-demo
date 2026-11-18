@@ -38,6 +38,11 @@ The fire button reuses the existing `Attack` action in `Assets/InputSystem_Actio
 - While seated the player body follows the chair's `SitPoint` in position **and rotation**, so
   the camera is attached to the chair and rolls/pitches with it. Look yaw is a clamped offset
   around the chair's own up axis (`ChairSittingConfig.SeatedYawLimit`).
+- A camera floor guard (`CameraFloorGuard` on `Main Camera`, running after every other
+  `LateUpdate`) keeps the eye above the surface below it while the chair tips and rolls. It
+  probes down past the rider and the ridden chair, so a chair on its side or upside down can no
+  longer push the camera through the floor or cut it with the near plane. The clamp uses the
+  near clip plane plus a small margin and only moves the camera, never the seat or the physics.
 - Velocity is clamped to `maxSpeed`.
 - Fuel is consumed only while spraying. At zero fuel the spray and the thrust stop and the
   chamber will not refill itself (`Refill()` exists for future pickups).
@@ -49,15 +54,56 @@ The fire button reuses the existing `Attack` action in `Assets/InputSystem_Actio
   empty chair into a desk moves it but stays silent. `FunnyImpactEffects.PlayTestImpact` (the
   context menu / smoke test hook) deliberately bypasses the gate.
 
+## The office arena
+
+`Assets/Scenes/RocketOffice.unity` is laid out as a driving arena for the chair. The room is
+32 x 32 m with 5.5 m walls (it used to be a 20 x 20 m office with 3.6 m walls), so there is room
+to reach `maxSpeed` and enough headroom to fly over the furniture.
+
+- The hand-authored office block - desks, storage, meeting area, reception, printers, wall
+  decor, props and the glass partition - stays in the middle as the obstacle course.
+- The clear ring between that block and the outer walls is the driving lane. The south straight
+  is the widest and shortest way out of the start paddock.
+- The start paddock sits just inside the south door: player spawn `(0, 0, -14.2)` facing north,
+  the demo chair at `(-2.6, 0, -13.6)` and the demo extinguisher beside it at
+  `(-1.9, 0.02, -13.45)`. The other two extinguishers are pickups against the new walls, on the
+  west ring at `(-15.4, 0.02, -0.9)` and the east ring at `(15.4, 0.02, 3.6)`.
+- Ceiling lights moved up to y = 4.2 with a 12 m range, and four shadowless fill lights at
+  `(+-11.5, 4.8, +-11.5)` (22 m range) keep the enlarged ring readable without touching the
+  office lighting.
+- The south door keeps its 2.4 m opening and header, so the doorway still reads as an exit.
+
+Rebuilding the room: **Tools > Rocket Chair > Remake Office Arena**
+(`FireExtinguisher.EditorTools.OfficeArenaSetup`). It writes absolute transforms and recreates
+its generated groups (`GlassBarriers`, `ArenaFillLights`) every run, so it is idempotent and
+never touches the hand-authored office content. It only *loads* the shared materials and the
+glass break clip, so laying out walls does not rewrite assets. Run **Rebuild All Assets** first
+if the chair, extinguisher or glass partition were rebuilt.
+
 ## Breakable glass
 
-The scene contains a framed glass partition at `(5, 0, -2)` (`GlassPartition`) that splits the
-east side of the office. It is solid until something hits it hard: `BreakableGlass` scores the
-impact the same way as `FunnyImpactEffects` (closing speed times a mass factor), so a chair at
-full thrust (75 kg with rider, ~9 m/s) shatters it while walking or coasting into it does not.
-On break the pane's collider and renderer switch off, 48 pre-built shard rigidbodies take over
-with spread/impact velocities and a camera shake, and the shards are cleaned up after
-`shardLifetime`. Break audio is a slot, not a clip: assign `breakClip` to hear it.
+The office partition at `(5, 0, -2)` (`GlassPartition`, 4.4 x 2.4 m, 48 shards) splits the east
+side of the office block. The arena adds three bigger barriers on the ring, so a driver can
+either fly over them or commit to smashing through:
+
+| Barrier | Position | Rotation | Size | Shards |
+| --- | --- | --- | --- | --- |
+| `GlassPartition` | `(5, 0, -2)` | 0 deg | 4.4 x 2.4 m | 48 |
+| `GlassBarrier_North` | `(0, 0, 12.7)` | 0 deg | 9 x 3 m | 72 |
+| `GlassBarrier_East` | `(13, 0, -7.5)` | 90 deg | 8 x 3 m | 60 |
+| `GlassBarrier_West` | `(-13, 0, 7)` | 90 deg | 8 x 3 m | 60 |
+
+Each barrier is a frame plus one solid pane; the 240 shard rigidbodies in total are inactive
+children that take over on break. They are solid until something hits them hard:
+`BreakableGlass` scores the impact the same way as `FunnyImpactEffects` (closing speed times a
+mass factor), so a chair at full thrust (75 kg with rider, ~9 m/s) shatters one while walking or
+coasting into it does not. On break the pane's collider and renderer switch off, the shards take
+over with spread/impact velocities and a camera shake, and they are cleaned up after
+`shardLifetime`. All four walls have `A_GlassBreak.wav` assigned.
+
+All barriers come from the same builder, `RocketChairSetup.BuildGlassWall(name, position,
+rotation, width, height, columns, rows)`, so the office partition and the extra walls share
+their pane, frame, shard and audio setup.
 
 ## Scripts
 
@@ -74,9 +120,12 @@ with spread/impact velocities and a camera shake, and the shards are cleaned up 
 | `Assets/Scripts/RocketChair/BreakableGlass.cs` | Impact-scored glass pane that shatters into physical shards. |
 | `Assets/Scripts/Player/PlayerEquipment.cs` | Hand anchor owner (`IEquipmentHolder`); picks up and drops the prop. |
 | `Assets/Scripts/Player/SeatController.cs` | Seated state; copies the seat anchor position and rotation every frame. |
+| `Assets/Scripts/Player/CameraFloorGuard.cs` | Keeps the camera out of the floor when the chair tips and rolls. |
 | `Assets/Scripts/Player/PlayerLook.cs` | Standing yaw/pitch; seated look offset on top of the chair rotation. |
 | `Assets/Scripts/UI/FuelGaugeUI.cs` | HUD fuel bar and percentage. |
 | `Assets/Editor/RocketChair/RocketChairSetup.cs` | Builds every generated asset, prefab and scene object. |
+| `Assets/Editor/Office/OfficeArenaSetup.cs` | Remakes `RocketOffice.unity` as the 32 x 32 m arena (menu + command line). |
+| `Assets/Editor/Office/DeskLampModelFix.cs` | Import hook that repairs the broken arm and shade of `desk_lamp.fbx`. |
 | `Assets/Editor/RocketChair/RocketChairSmokeTest.cs` | Headless Play Mode smoke test. |
 
 `PlayerInputReader` gained `FireHeld` (bound to `Attack`), `DropWasPressed` (bound to `Drop`)
@@ -97,9 +146,37 @@ Menu: **Tools > Rocket Chair > Rebuild All Assets**. The setup is idempotent and
 - `Assets/Settings/Chairs/ChairSittingConfig_Rocket.asset` - 180 degree seated yaw limit.
 - Updates `PF_OfficeChair.prefab` (wheel colliders, anchors, controller, feedback) and
   `PF_Player.prefab` (`HandAnchor`, `PlayerEquipment`).
-- Updates `Assets/Scenes/RocketOffice.unity` (`RocketChair_Demo` chair, three extinguisher
-  props, the `GlassPartition` breakable wall, fuel gauge on the HUD, `CameraFeedback` on
-  `Main Camera`).
+- Updates `Assets/Scenes/RocketOffice.unity` (`RocketChair_Demo` chair in the start paddock,
+  three extinguisher props, the `GlassPartition` breakable wall, fuel gauge on the HUD,
+  `CameraFeedback` and `CameraFloorGuard` on `Main Camera`).
+
+Menu: **Tools > Rocket Chair > Remake Office Arena** (`OfficeArenaSetup`) then rebuilds the
+scene shell on top of that content:
+
+- Floor and outer walls at 32 x 32 m, walls 5.5 m high, plus matching skirting, door frame and
+  doormat.
+- Start paddock (player spawn, demo chair, demo extinguisher) inside the south door.
+- `RocketOffice/ArenaFillLights` - four shadowless fill lights for the ring.
+- `RocketOffice/GlassBarriers` - three extra breakable glass walls (`GlassBarrier_North`,
+  `GlassBarrier_East`, `GlassBarrier_West`).
+
+Both menus are idempotent, so they can be re-run at any time. `OfficeArenaSetup` writes
+absolute transforms and recreates only its own generated groups; it does not rewrite materials,
+prefabs or audio.
+
+### Desk lamp repair
+
+`Assets/Lowpoly office assets/desk_lamp.fbx` ships with its steel arm and orange shade detached
+from the post, so every one of the four office lamps looked exploded. `DeskLampModelFix` is an
+`AssetPostprocessor` that rewrites that mesh on import: the arm is hinged at the top of the post
+and aimed up over the desk, and the shade hangs from the arm tip with its opening facing down.
+The bulb is re-centred on the shade's axis so it no longer pokes through the cone. It is mesh
+data only - pivot, scale, materials and the four scene instances are untouched, and no extra
+mesh or prefab is generated.
+
+Unity logs a one-line `Importer(FBXImporter) generated inconsistent result` warning for that FBX
+because a postprocessor changes imported mesh data; it is harmless and does not loop. Edit the
+`ArmPose` / `ShadePose` constants at the top of the file to re-pose the lamp.
 
 All existing `PF_OfficeChair` instances also become rocket chairs because the components live
 on the shared prefab.
@@ -156,7 +233,7 @@ On `FunnyImpactEffects`:
 - `minimumSpeed` 3, `mediumSpeed` 6, `bigSpeed` 9 m/s, scaled by the other body's mass.
 - `cooldown` 0.35 s and pair de-duplication keep impacts readable.
 
-On the glass pane (`BreakableGlass`, on `GlassPartition/Pane`):
+On the glass panes (`BreakableGlass`, on each barrier's `Pane`):
 
 - `minimumSpeed` 4 m/s, `breakScore` 15 (speed x mass factor). A seated chair (75 kg) breaks
   it at about 7.5 m/s; the player on foot (70 kg, 7 m/s sprint) sits just under the threshold.
@@ -173,7 +250,7 @@ Headless Play Mode test (picks the scene extinguisher up through the real intera
 checks it rides the hand while the player moves, checks every generated audio clip is wired,
 sits the real scene player on the demo chair, fires, measures fuel/speed/thrust direction and
 spray direction, empties the tank, triggers an impact, rams the glass partition, checks the
-seated camera, stands up and drops the prop):
+seated camera and the floor guard at a 150 degree chair roll, stands up and drops the prop):
 
 ```
 "C:\Program Files\Unity\Hub\Editor\6000.3.11f1\Editor\Unity.exe" -batchmode ^
@@ -199,5 +276,7 @@ the test.
 1. Visual look of the first-person extinguisher model, spray and impact particles.
 2. Audio mix and how the generated placeholders sound in a session.
 3. Camera feel: impact trauma, rocket rumble, motion sickness.
-4. Flight tuning in a real 20x20 m room (thrust, max speed, upright assist strength).
-5. How the glass shatter reads in motion (shard size, spread and lifetime).
+4. Flight tuning in the real 32 x 32 m arena (thrust, max speed, upright assist strength,
+   whether the ring is wide enough to build speed before a barrier).
+5. How the glass shatter reads in motion (shard size, spread and lifetime) on the three extra
+   3 m-high barriers, which a chair can also fly over.
